@@ -2,8 +2,6 @@ package edu.imtilsd.rabbimq_case;
 
 import com.rabbitmq.client.*;
 import org.json.JSONObject;
-
-// 不再导入 java.sql.Connection
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -25,7 +23,6 @@ public class PaymentService implements Runnable {
         factory.setPassword(AppConfig.get("rabbitmq.password"));
 
         try {
-            // 使用 com.rabbitmq.client.Connection 显式命名
             com.rabbitmq.client.Connection rmqConnection = factory.newConnection();
             Channel channel = rmqConnection.createChannel();
 
@@ -38,13 +35,13 @@ public class PaymentService implements Runnable {
                 JSONObject orderJson = new JSONObject(msg);
                 System.out.println("[PaymentService] Received: " + orderJson);
 
-                // 模拟支付逻辑
+                // Simulate payment process
                 boolean paySuccess = processPayment(orderJson);
                 if (paySuccess) {
-                    // 更新订单状态为 PAID
+                    // Update order status
                     updateOrderStatus(orderJson.getInt("orderId"), "PAID");
 
-                    // 转发给配送服务
+                    // send to DeliveryService
                     channel.basicPublish(EXCHANGE_NAME, NEXT_ROUTING_KEY, null, msg.getBytes());
                     System.out.println("[PaymentService] Payment OK. Forwarded to DeliveryService.");
                 } else {
@@ -75,7 +72,6 @@ public class PaymentService implements Runnable {
     private void updateOrderStatus(int orderId, String status) {
         String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
 
-        // 在这里使用 java.sql.Connection 的全限定名
         try (java.sql.Connection conn = DbConnection.getOrderDbConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 

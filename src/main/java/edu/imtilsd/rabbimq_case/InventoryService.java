@@ -26,11 +26,11 @@ public class InventoryService implements Runnable {
 
 
         try {
-            // RabbitMQ 连接
+            // Connect to RabbitMQ
             Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();
 
-            // 声明交换机 & 队列
+            // Declare exchange and queue
             channel.exchangeDeclare(EXCHANGE_NAME, "topic", true);
             channel.queueDeclare(QUEUE_NAME, true, false, false, null);
             channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, BINDING_KEY);
@@ -40,15 +40,14 @@ public class InventoryService implements Runnable {
                 JSONObject orderJson = new JSONObject(msg);
                 System.out.println("[InventoryService] Received order: " + orderJson);
 
-                // 模拟库存检查和扣减
+                // simulate inventory check and deduction
                 boolean success = checkAndDeductInventory(orderJson);
                 if (success) {
-                    // 转发消息给支付服务
+                    // send to PaymentService
                     channel.basicPublish(EXCHANGE_NAME, NEXT_ROUTING_KEY, null, msg.getBytes());
                     System.out.println("[InventoryService] Inventory OK. Forwarded to PaymentService.");
                 } else {
                     System.out.println("[InventoryService] Inventory NOT enough. Order failed.");
-                    // 也可更新订单数据库状态为 FAILED，具体逻辑可自行拓展
                 }
 
                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
@@ -56,12 +55,12 @@ public class InventoryService implements Runnable {
 
             channel.basicConsume(QUEUE_NAME, false, deliverCallback, consumerTag -> {});
 
-            // 保持当前线程存活
+            // keep running
             while (running) {
                 Thread.sleep(1000);
             }
 
-            // 停止时关闭资源
+            // close resources
             channel.close();
             connection.close();
 
@@ -71,7 +70,7 @@ public class InventoryService implements Runnable {
     }
 
     /**
-     * 检查并扣减库存
+     * Check and deduct inventory
      */
     private boolean checkAndDeductInventory(JSONObject orderJson) {
         String productId = orderJson.getString("productId");
@@ -80,7 +79,7 @@ public class InventoryService implements Runnable {
         String updateSql = "UPDATE stocks SET stock_quantity = stock_quantity - ? WHERE product_id = ?";
 
         try (java.sql.Connection conn = DbConnection.getInventoryDbConnection()) {
-            // 查询库存
+            // get current stock
             int currentStock = 0;
             try (PreparedStatement stmt = conn.prepareStatement(querySql)) {
                 stmt.setString(1, productId);
@@ -90,7 +89,7 @@ public class InventoryService implements Runnable {
                 }
             }
 
-            // 如果库存足够，则扣减
+            // check and deduct
             if (currentStock >= requiredQty) {
                 try (PreparedStatement stmt2 = conn.prepareStatement(updateSql)) {
                     stmt2.setInt(1, requiredQty);

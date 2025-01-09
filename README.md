@@ -146,9 +146,21 @@ After starting, `OrderService` will generate a random order every 2 seconds. `In
 
 ---
 
-## Contribution and Extension
+## Contribution and Expansion
 
-To add new modules (e.g., coupon service or log analysis), create new exchanges or queues in RabbitMQ and implement corresponding processing classes. Contributions via Issues or Pull Requests are welcome to help improve the project.
+- **Adding New Business Scenarios**: More services can be inserted into or run parallel to existing processes. For example:
+
+  - Log Audit Service (subscribe to all order events and analyze the data)
+- **Error Handling and Retry**: Add retry mechanisms in services such as PaymentService and InventoryService, or handle abnormal messages using RabbitMQ's dead letter queues.
+- **Multilingual Microservices**: If certain modules need to be implemented in Python, Node.js, Go, etc., ensure compatibility with RabbitMQ's message format and routing keys to seamlessly integrate with Java modules.
+- **Monitoring and Alerts**: Use tools like Prometheus and Grafana to monitor service metrics (message backlog, consumption rate, DB access latency, etc.) and set up timely alerts.
+
+---
+
+## Author Information
+
+- **Author**: ZHU Xinlei
+- **GitHub**: [GatsbyBytheSea](https://github.com/GatsbyBytheSea)
 
 ---
 

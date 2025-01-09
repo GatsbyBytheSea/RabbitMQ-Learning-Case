@@ -6,17 +6,8 @@ import java.sql.SQLException;
 
 public class DbConnection {
 
-    static {
-        try {
-            // 加载 MySQL 驱动，如果使用了 Maven 依赖可忽略
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
-     * 获取订单数据库连接
+     * Retrieve order database connection
      */
     public static Connection getOrderDbConnection() throws SQLException {
         String url = AppConfig.get("orderdb.url");
@@ -26,7 +17,7 @@ public class DbConnection {
     }
 
     /**
-     * 获取库存数据库连接
+     * Retrieve inventory database connection
      */
     public static Connection getInventoryDbConnection() throws SQLException {
         String url = AppConfig.get("inventorydb.url");

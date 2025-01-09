@@ -4,7 +4,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.json.JSONObject;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Random;
@@ -29,18 +28,18 @@ public class OrderService implements Runnable {
         try (Connection rabbitConnection = factory.newConnection();
              Channel channel = rabbitConnection.createChannel()) {
 
-            // 声明交换机
+            // Declare exchange
             channel.exchangeDeclare(EXCHANGE_NAME, "topic", true);
 
-            // 不断发送随机订单
+            // keep running and randomly generate orders
             while (running) {
-                // 1. 随机构造订单
+                // generate a random order
                 JSONObject order = createRandomOrder();
 
-                // 2. 插入到订单数据库(简易示例)
+                // insert order into database
                 insertOrderIntoDb(order);
 
-                // 3. 发布到 RabbitMQ
+                // publish order to RabbitMQ
                 channel.basicPublish(
                         EXCHANGE_NAME,
                         ROUTING_KEY,
@@ -49,7 +48,7 @@ public class OrderService implements Runnable {
                 );
                 System.out.println("[OrderService] Sent order: " + order);
 
-                // 每隔 2 秒发送一个订单
+                // sleep for a while before sending next order
                 Thread.sleep(2000);
             }
 
@@ -59,7 +58,7 @@ public class OrderService implements Runnable {
     }
 
     /**
-     * 随机构造订单
+     * randomly generate an order
      */
     private JSONObject createRandomOrder() {
         JSONObject orderJson = new JSONObject();
@@ -68,7 +67,7 @@ public class OrderService implements Runnable {
         double price = random.nextDouble() * 1000; // 随机生成价格
         int quantity = 1 + random.nextInt(5);      // 1~5 件
 
-        // 随机生成商品 ID
+        // randomly select a product
         String productId = "P" + (100 + random.nextInt(10)); // P100 ~ P109
 
         orderJson.put("orderId", orderId);
@@ -81,7 +80,7 @@ public class OrderService implements Runnable {
     }
 
     /**
-     * 将订单插入到订单数据库
+     * insert order into database
      */
     private void insertOrderIntoDb(JSONObject order) {
         String sql = "INSERT INTO orders(order_id, user_id, product_id, quantity, total_price, status) "

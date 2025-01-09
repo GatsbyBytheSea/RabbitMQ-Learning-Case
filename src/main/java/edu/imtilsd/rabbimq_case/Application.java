@@ -3,7 +3,6 @@ package edu.imtilsd.rabbimq_case;
 public class Application {
 
     public static void main(String[] args) {
-        // 正常情况下，你可以提示用户先运行 init_db.sh
         System.out.println("Please ensure you have run `./init_db.sh` to initialize the databases.");
 
         OrderService orderService = new OrderService();

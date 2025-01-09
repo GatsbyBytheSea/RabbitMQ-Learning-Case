@@ -17,7 +17,7 @@ public class DeliveryService implements Runnable {
 
     @Override
     public void run() {
-        // 1) 读取 RabbitMQ 配置信息
+        // Read RabbitMQ connection info from config
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(AppConfig.get("rabbitmq.host"));
         factory.setPort(AppConfig.getInt("rabbitmq.port", 5672));
@@ -25,7 +25,7 @@ public class DeliveryService implements Runnable {
         factory.setPassword(AppConfig.get("rabbitmq.password"));
 
         try {
-            // 2) 建立 RabbitMQ 连接，不要用简写 Connection，这里显式写出来
+            // Build connection and channel
             com.rabbitmq.client.Connection rmqConnection = factory.newConnection();
             Channel channel = rmqConnection.createChannel();
 
@@ -38,25 +38,25 @@ public class DeliveryService implements Runnable {
                 JSONObject orderJson = new JSONObject(msg);
                 System.out.println("[DeliveryService] Received: " + orderJson);
 
-                // 模拟配送逻辑
+                // Simulate delivery process
                 processDelivery(orderJson);
 
-                // 更新订单状态为 DELIVERED
+                // Update order status
                 updateOrderStatus(orderJson.getInt("orderId"), "DELIVERED");
                 System.out.println("[DeliveryService] Order delivered.");
 
                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
             };
 
-            // 3) 消费队列消息
+            // Consume messages
             channel.basicConsume(QUEUE_NAME, false, deliverCallback, consumerTag -> {});
 
-            // 4) 保持运行
+            // keep running
             while (running) {
                 Thread.sleep(1000);
             }
 
-            // 5) 停止时关闭资源
+            // Shutdown and clean up
             channel.close();
             rmqConnection.close();
 
@@ -66,19 +66,18 @@ public class DeliveryService implements Runnable {
     }
 
     /**
-     * 模拟配送逻辑
+     * Simulate delivery process
      */
     private void processDelivery(JSONObject orderJson) {
         System.out.println("[DeliveryService] Delivering order: " + orderJson.getInt("orderId"));
     }
 
     /**
-     * 更新订单数据库中的订单状态
+     * Update order status in database
      */
     private void updateOrderStatus(int orderId, String status) {
         String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
 
-        // 这里用 JDBC 的 Connection
         try (Connection dbConnection = DbConnection.getOrderDbConnection();
              PreparedStatement stmt = dbConnection.prepareStatement(sql)) {
 

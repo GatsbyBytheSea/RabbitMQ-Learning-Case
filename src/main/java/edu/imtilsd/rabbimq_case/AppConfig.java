@@ -9,7 +9,7 @@ public class AppConfig {
     private static final Properties props = new Properties();
 
     static {
-        // 尝试从 resources 目录下加载 application.properties
+        // Attempt to load application.properties from the resources directory.
         try (InputStream in = AppConfig.class.getResourceAsStream("/application.properties")) {
             if (in != null) {
                 props.load(in);
@@ -22,14 +22,14 @@ public class AppConfig {
     }
 
     /**
-     * 获取配置
+     * Retrieve Configuration
      */
     public static String get(String key) {
         return props.getProperty(key);
     }
 
     /**
-     * 获取 int 类型配置
+     * Retrieve int-type configuration
      */
     public static int getInt(String key, int defaultValue) {
         try {
